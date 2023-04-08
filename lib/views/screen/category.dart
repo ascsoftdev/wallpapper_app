@@ -1,8 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:wallpaper_app/controller/apiOper.dart';
+import 'package:wallpaper_app/model/PhotosModel.dart';
 import 'package:wallpaper_app/views/widget/CustomAppBar.dart';
 
-class CategoryScreen extends StatelessWidget {
-  const CategoryScreen({super.key});
+import 'fullScreen.dart';
+
+class CategoryScreen extends StatefulWidget {
+  String catName;
+  String catImgUrl;
+  CategoryScreen({super.key, required this.catName, required this.catImgUrl});
+
+  @override
+  State<CategoryScreen> createState() => _CategoryScreenState();
+}
+
+class _CategoryScreenState extends State<CategoryScreen> {
+  static List<PhotosModel> photosModelList = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getCategoryByWallpapers();
+  }
+
+  getCategoryByWallpapers() async {
+    photosModelList = await ApiOperations.searchWallpapers(widget.catName);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +51,7 @@ class CategoryScreen extends StatelessWidget {
                   height: 150,
                   width: MediaQuery.of(context).size.width,
                   fit: BoxFit.cover,
-                  "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+                  widget.catImgUrl,
                 ),
                 Container(
                   height: 150,
@@ -37,8 +62,8 @@ class CategoryScreen extends StatelessWidget {
                   left: 120,
                   top: 20,
                   child: Column(
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         "Category",
                         style: TextStyle(
                           color: Colors.white,
@@ -47,8 +72,8 @@ class CategoryScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "Mountain",
-                        style: TextStyle(
+                        widget.catName,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 30,
                           fontWeight: FontWeight.w600,
@@ -59,31 +84,47 @@ class CategoryScreen extends StatelessWidget {
                 )
               ],
             ),
+            const SizedBox(
+              height: 10,
+            ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 5),
-              height: MediaQuery.of(context).size.height,
+              height: 700,
               child: GridView.builder(
                   physics: BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      mainAxisExtent: 400,
+                      mainAxisExtent: 250,
                       crossAxisCount: 2,
                       crossAxisSpacing: 5,
                       mainAxisSpacing: 5),
-                  itemCount: 16,
-                  itemBuilder: ((context, index) => Container(
-                        height: 400,
-                        width: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.amberAccent,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                              height: 400,
-                              width: 50,
-                              fit: BoxFit.cover,
-                              "https://images.pexels.com/photos/6611383/pexels-photo-6611383.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"),
+                  itemCount: photosModelList.length,
+                  itemBuilder: ((context, index) => InkWell(
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => FullScreen(
+                                      imageUrl:
+                                          photosModelList[index].imgSrc)));
+                        },
+                        child: Hero(
+                          tag: photosModelList[index].imgSrc,
+                          child: Container(
+                            height: 250,
+                            width: 50,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.amberAccent,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                  height: 250,
+                                  width: 50,
+                                  fit: BoxFit.cover,
+                                  photosModelList[index].imgSrc),
+                            ),
+                          ),
                         ),
                       ))),
             )

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:wallpaper_app/controller/apiOper.dart';
 import 'package:wallpaper_app/model/PhotosModel.dart';
+import 'package:wallpaper_app/model/categoryModel.dart';
 import 'package:wallpaper_app/views/screen/fullScreen.dart';
 import 'package:wallpaper_app/views/widget/CatBlock.dart';
 import 'package:wallpaper_app/views/widget/CustomAppBar.dart';
 import 'package:wallpaper_app/views/widget/SearchBar.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,8 +19,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<PhotosModel> trendingWallpapers = [];
   late TabController _controller;
+  List<CategoryModel> categoryWallpapersList = [];
 
   getTrendingWallpaperList() async {
+    categoryWallpapersList = await ApiOperations.getCategoriesList();
     trendingWallpapers = await ApiOperations.getTrendingWallpapers();
     setState(() {});
   }
@@ -60,8 +65,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 width: MediaQuery.of(context).size.width,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: 30,
-                  itemBuilder: ((context, index) => const CatBlock()),
+                  itemCount: categoryWallpapersList.length,
+                  itemBuilder: ((context, index) => CatBlock(
+                        categoryModelData: categoryWallpapersList[index],
+                      )),
                 ),
               ),
             ),
@@ -97,11 +104,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image.network(
-                                    height: 250,
-                                    width: 50,
-                                    fit: BoxFit.cover,
-                                    trendingWallpapers[index].imgSrc),
+                                child: CachedNetworkImage(
+                                  imageUrl: trendingWallpapers[index].imgSrc,
+                                  placeholder: (context, url) =>
+                                      const CircularProgressIndicator(),
+                                  cacheManager: CacheManager(Config(
+                                    'customCacheKey',
+                                    stalePeriod: const Duration(days: 1),
+                                  )),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(
+                                    Icons.error,
+                                    size: 100,
+                                    color: Colors.red,
+                                  ),
+                                  height: 250,
+                                  width: 50,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           ),
