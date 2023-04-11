@@ -20,11 +20,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<PhotosModel> trendingWallpapers = [];
   late TabController _controller;
   List<CategoryModel> categoryWallpapersList = [];
+  bool isLoading = true;
 
   getTrendingWallpaperList() async {
     categoryWallpapersList = await ApiOperations.getCategoriesList();
     trendingWallpapers = await ApiOperations.getTrendingWallpapers();
-    setState(() {});
+    setState(() {
+      this.isLoading = false;
+    });
   }
 
   @override
@@ -48,89 +51,94 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           word2: "Guru",
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.only(top: 10),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-              ),
-              child: SearchBar(),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              child: SizedBox(
-                height: 60,
-                width: MediaQuery.of(context).size.width,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categoryWallpapersList.length,
-                  itemBuilder: ((context, index) => CatBlock(
-                        categoryModelData: categoryWallpapersList[index],
-                      )),
-                ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              height: 700,
-              child: GridView.builder(
-                  physics: BouncingScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      mainAxisExtent: 250,
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 5,
-                      mainAxisSpacing: 5),
-                  itemCount: trendingWallpapers.length,
-                  itemBuilder: ((context, index) => GridTile(
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => FullScreen(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.only(top: 10),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                    ),
+                    child: SearchBar(),
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    child: SizedBox(
+                      height: 60,
+                      width: MediaQuery.of(context).size.width,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categoryWallpapersList.length,
+                        itemBuilder: ((context, index) => CatBlock(
+                              categoryModelData: categoryWallpapersList[index],
+                            )),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 5),
+                    height: 700,
+                    child: GridView.builder(
+                        physics: BouncingScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                mainAxisExtent: 250,
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 5,
+                                mainAxisSpacing: 5),
+                        itemCount: trendingWallpapers.length,
+                        itemBuilder: ((context, index) => GridTile(
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => FullScreen(
+                                              imageUrl:
+                                                  trendingWallpapers[index]
+                                                      .imgSrc)));
+                                },
+                                child: Hero(
+                                  tag: trendingWallpapers[index].imgSrc,
+                                  child: Container(
+                                    height: 250,
+                                    width: 50,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      color: Colors.amberAccent,
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: CachedNetworkImage(
                                         imageUrl:
-                                            trendingWallpapers[index].imgSrc)));
-                          },
-                          child: Hero(
-                            tag: trendingWallpapers[index].imgSrc,
-                            child: Container(
-                              height: 250,
-                              width: 50,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.amberAccent,
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: CachedNetworkImage(
-                                  imageUrl: trendingWallpapers[index].imgSrc,
-                                  placeholder: (context, url) =>
-                                      const CircularProgressIndicator(),
-                                  cacheManager: CacheManager(Config(
-                                    'customCacheKey',
-                                    stalePeriod: const Duration(days: 1),
-                                  )),
-                                  errorWidget: (context, url, error) =>
-                                      const Icon(
-                                    Icons.error,
-                                    size: 100,
-                                    color: Colors.red,
+                                            trendingWallpapers[index].imgSrc,
+                                        placeholder: (context, url) =>
+                                            const CircularProgressIndicator(),
+                                        cacheManager: CacheManager(Config(
+                                          'customCacheKey',
+                                          stalePeriod: const Duration(days: 1),
+                                        )),
+                                        errorWidget: (context, url, error) =>
+                                            const Icon(
+                                          Icons.error,
+                                          size: 100,
+                                          color: Colors.red,
+                                        ),
+                                        height: 250,
+                                        width: 50,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
-                                  height: 250,
-                                  width: 50,
-                                  fit: BoxFit.cover,
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
-                      ))),
-            )
-          ],
-        ),
-      ),
+                            ))),
+                  )
+                ],
+              ),
+            ),
     );
   }
 }
